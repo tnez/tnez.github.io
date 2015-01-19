@@ -3,17 +3,18 @@ permalink:        pretty
 relative_permalinks: true
 
 # Setup
-title:            Poole
-tagline:          The Jekyll Butler
-url:              http://getpoole.com
+title:            tnesland.me
+tagline:          Software Developer + Data Wrangler
+url:              http://tnesland.me
+shorturl:	  tnesland.me
 paginate:         1
 baseurl:          /
 author:
-  name:           Mark Otto
-  url:            https://twitter.com/mdo
-  email:          markdotto@gmail.com
+  name:           Travis Nesland
+  url:            http://tnesland.me
+  email:          tnesland@gmail.com
 
 # Custom vars
 version:          1.0.0
 github:
-  repo:           https://github.com/poole/poole
+  repo:           https://github.com/tnez/tnez.github.io
