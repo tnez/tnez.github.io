@@ -1,0 +1,85 @@
+---
+layout: post
+title: First Post Using Jekyll
+excerpt: Test post after migrating from Wordpress to Jekyll on github.io
+categories: [blogging, productivity, development]
+tags: [github.io, orgmode, jekyll, wordpress]
+---
+
+<p>
+I've decided to switch my personal blog from <a href="http://wordpress.org">Wordpress</a> to <a href="http://jekyllrb.com/">Jekyll</a>
+hosted on <a href="http://pages.github.com">GitHub Pages</a> because I like the simplicity and I like the
+workflow it enables:
+</p>
+
+<ol class="org-ol">
+<li>Compose a post in <a href="http://orgmode.org">OrgMode</a>.
+</li>
+<li>Export post using <a href="http://orgmode.org">OrgMode's</a> built in <a href="http://orgmode.org/manual/Export-back_002dends.html">Export back-ends</a>.
+</li>
+<li>Preview post using <a href="http://jekyllrb.com/">Jekyll's</a> built-in server.
+</li>
+<li>Commit changes and push to <a href="http://github.com">GitHub</a>.
+</li>
+</ol>
+
+<p>
+This post is not much more than a test post to insure things are
+working as I expect, but feel free to check out some of my <a href="http://www.gnu.org/software/emacs/">Emacs</a>
+customization that I used to get things working.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-elisp"><span class="org-comment-delimiter">;; </span><span class="org-comment">only provide css selectors for code highlighting rather than inline</span>
+<span class="org-comment-delimiter">;; </span><span class="org-comment">css</span>
+(setq org-html-htmlize-output-type 'css)
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">disable underscore to subscript</span>
+(setq org-export-with-sub-superscripts nil)
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">create new post template</span>
+(setq tnesland-org-post-dir
+<span class="org-string">"~/Documents/tnesland.me/_org_posts/"</span>)
+(<span class="org-keyword">defvar</span> <span class="org-variable-name">new-post-template</span>
+  <span class="org-string">"#+STARTUP: showall indent\n#+STARTUP: hidestars\n#+OPTIONS: H:4 toc:nil\n#+BEGIN_HTML\n---\nlayout: default\ntitle: %s\nexcerpt: \ncategories: \ntags: \n---\n#+END_HTML\n"</span>)
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">function to convert titles to url titles taken from:</span>
+<span class="org-comment-delimiter">;; </span><span class="org-comment">http://www.gorgnegre.com/linux/using-emacs-orgmode-to-blog-with-jekyll.html</span>
+(<span class="org-keyword">defun</span> <span class="org-function-name">make-slug</span> (s)
+  <span class="org-doc">"Turn a string into a slug."</span>
+  (replace-regexp-in-string
+   <span class="org-string">" "</span> <span class="org-string">"-"</span> (downcase
+            (replace-regexp-in-string
+             <span class="org-string">"[</span><span class="org-string"><span class="org-negation-char">^</span></span><span class="org-string">A-Za-z0-9 ]"</span> <span class="org-string">""</span> s))))
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">new-blog-post</span> (title)
+  <span class="org-doc">"Create a new blog post for tnesland.me"</span>
+  (interactive <span class="org-string">"sPost Title: "</span>)
+  (<span class="org-keyword">let*</span> ((web-safe-title (concat (format-time-string <span class="org-string">"%Y-%m-%d"</span>)
+                                 <span class="org-string">"-"</span> (make-slug title))))
+    (find-file (concat tnesland-org-post-dir
+                       web-safe-title <span class="org-string">".org"</span>))
+    (insert (format new-post-template title))))
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">setup my project export list</span>
+<span class="org-comment-delimiter">;; </span><span class="org-comment">setup my org-publish list</span>
+(setq org-publish-project-alist
+      '(
+        (<span class="org-string">"tnesland-org"</span>
+         <span class="org-builtin">:base-directory</span> <span class="org-string">"~/Documents/tnesland.me/_org_posts/"</span>
+         <span class="org-builtin">:base-extension</span> <span class="org-string">"org"</span>
+         <span class="org-builtin">:publishing-directory</span> <span class="org-string">"~/Documents/tnesland.me/_posts/"</span>
+         <span class="org-builtin">:recursive</span> t
+         <span class="org-builtin">:publishing-function</span> org-html-publish-to-html
+         <span class="org-builtin">:headline-levels</span> 4
+         <span class="org-builtin">:body-only</span> t)
+        (<span class="org-string">"tnesland-extra"</span>
+         <span class="org-builtin">:base-directory</span> <span class="org-string">"~/Documents/tnesland.me/_media/"</span>
+         <span class="org-builtin">:base-extension</span> <span class="org-string">"css</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">js</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">png</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">jpg</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">gif</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">pdf</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">mp3</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">ogg</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">swf</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">|</span></span><span class="org-string">php"</span>
+         <span class="org-builtin">:publishing-directory</span> <span class="org-string">"~/Documents/tnesland.me/public/media/"</span>
+         <span class="org-builtin">:publishing-function</span> org-publish-attachement
+         <span class="org-builtin">:recursive</span> t)
+        (<span class="org-string">"tnesland"</span> <span class="org-builtin">:components</span> (<span class="org-string">"tnesland-org"</span> <span class="org-string">"tnesland-extra"</span>))))
+</pre>
+</div>
