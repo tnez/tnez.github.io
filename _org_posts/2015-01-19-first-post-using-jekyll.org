@@ -1,0 +1,81 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil
+#+BEGIN_HTML
+---
+layout: post
+title: First Post Using Jekyll
+excerpt: Test post after migrating from Wordpress to Jekyll on github.io
+categories: [blogging, productivity, development]
+tags: [github.io, orgmode, jekyll, wordpress]
+---
+#+END_HTML
+
+After reading [[http://http://joshualande.com/jekyll-github-pages-poole/][this excellent tutorial]] I've decided to switch my
+personal blog from [[http://wordpress.org][Wordpress]] to [[http://jekyllrb.com/][Jekyll]] hosted on [[http://pages.github.com][GitHub Pages]] because
+I like the simplicity and I like the workflow it enables:
+
+1) Compose a post in [[http://orgmode.org][OrgMode]].
+2) Export post using [[http://orgmode.org][OrgMode's]] built in [[http://orgmode.org/manual/Export-back_002dends.html][export back-ends]].
+3) Preview post using [[http://jekyllrb.com/][Jekyll's]] built-in server.
+4) Commit changes and push to [[http://github.com][GitHub]].
+
+This post is not much more than a test post to insure things are
+working as I expect, but feel free to check out some of my [[http://www.gnu.org/software/emacs/][Emacs]]
+customization that I used to get things working.
+
+#+BEGIN_SRC elisp :exports code :eval no
+  ;; only provide css selectors for code highlighting rather than inline
+  ;; css
+  (setq org-html-htmlize-output-type 'css)
+
+  ;; disable underscore to subscript
+  (setq org-export-with-sub-superscripts nil)
+
+  ;; create new post template
+  (setq tnesland-org-post-dir
+  "~/Documents/tnesland.me/_org_posts/")
+  (defvar new-post-template
+    "#+STARTUP: showall indent\n#+STARTUP: hidestars\n#+OPTIONS: H:4 toc:nil\n#+BEGIN_HTML\n---\nlayout: default\ntitle: %s\nexcerpt: \ncategories: \ntags: \n---\n#+END_HTML\n")
+
+  ;; function to convert titles to url titles taken from:
+  ;; http://www.gorgnegre.com/linux/using-emacs-orgmode-to-blog-with-jekyll.html
+  (defun make-slug (s)
+    "Turn a string into a slug."
+    (replace-regexp-in-string
+     " " "-" (downcase
+              (replace-regexp-in-string
+               "[^A-Za-z0-9 ]" "" s))))
+
+  (defun new-blog-post (title)
+    "Create a new blog post for tnesland.me"
+    (interactive "sPost Title: ")
+    (let* ((web-safe-title (concat (format-time-string "%Y-%m-%d")
+                                   "-" (make-slug title))))
+      (find-file (concat tnesland-org-post-dir
+                         web-safe-title ".org"))
+      (insert (format new-post-template title))))
+
+  ;; setup my project export list
+  ;; setup my org-publish list
+  (setq org-publish-project-alist
+        '(
+          ("tnesland-org"
+           :base-directory "~/Documents/tnesland.me/_org_posts/"
+           :base-extension "org"
+           :publishing-directory "~/Documents/tnesland.me/_posts/"
+           :recursive t
+           :publishing-function org-html-publish-to-html
+           :headline-levels 4
+           :body-only t)
+          ("tnesland-extra"
+           :base-directory "~/Documents/tnesland.me/_media/"
+           :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf\\|php"
+           :publishing-directory "~/Documents/tnesland.me/public/media/"
+           :publishing-function org-publish-attachement
+           :recursive t)
+          ("tnesland" :components ("tnesland-org" "tnesland-extra"))))
+
+#+END_SRC
+
+
