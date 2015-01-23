@@ -1,0 +1,41 @@
+---
+layout: post
+title: Getting Euclidean distances between centers of regions of interest
+categories: [neuroimaging,data-analysis]
+tags: [python,scipy,roi,brain]
+---
+
+<p>
+A collaborator is using connectivity data that we had generated to
+validate his model for Epilepsy. We have previously given him
+<b>NxN</b> connectivity matrices representing the connections between
+regions of interest (ROIs) for each subject but in addition to these
+he needs the Euclidean distance between all possible pairs of
+ROIs. This is all <b>super</b> easy using scipy’s center of mass function:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">given a *D* dimensional array *I* where *N* regions, denoted by</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">sequential integers starting at 1, return an NxD array *coords*</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">containing the centers of mass for each region (in index space) and</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">an NxN array *Dist* where the entry D[i,j] corresponds to the euclidean</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">distance between the centers of regions i and j respectively.</span>
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">from</span> scipy.ndimage.measurements <span class="org-keyword">import</span> center_of_mass
+
+<span class="org-variable-name">D</span> = I.ndim
+<span class="org-variable-name">N</span> = I[:].<span class="org-builtin">max</span>()
+
+<span class="org-variable-name">coords</span> = np.asarray(center_of_mass(I,I,<span class="org-builtin">range</span>(1,N+1)))
+
+<span class="org-variable-name">euc_dist</span> = lamda x,y: np.sqrt(np.<span class="org-builtin">sum</span>((y-x)**2))
+
+<span class="org-variable-name">distance</span> = np.zeros((N,N))
+<span class="org-keyword">for</span> i <span class="org-keyword">in</span> <span class="org-builtin">range</span>(0,N):
+    <span class="org-keyword">for</span> j <span class="org-keyword">in</span> <span class="org-builtin">range</span>(i,N):
+        <span class="org-variable-name">_distance</span> = euc_dist(coords[i],coords[j])
+        <span class="org-variable-name">distance</span>[i,j] = _distance
+        <span class="org-variable-name">distance</span>[j,i] = _distance
+</pre>
+</div>
