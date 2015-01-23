@@ -1,0 +1,35 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil num:nil
+#+BEGIN_HTML
+---
+layout: page
+title: Ideas For Blog Posts
+permalink: /ideas/
+categories: blogging
+tags: ideas
+---
+#+END_HTML
+
+* Emacs and RVM
+  
+  Keywords: [development,rails,ruby,emacs]
+  
+  Iron out issues getting my terminal in Emacs to work as expected
+  with RVM. Right now it is not picking up the propper gemset and
+  things are failing. But as always, the more I can do inside Emacs,
+  the quicker I can get things done.
+  
+* Analysis of Jr Developer Salaries
+  
+  Keywords: [data-analysis,R,glassdoor,career-development]
+  
+  Pull data from glassdoor and see if we can't get a nice visual
+  representation of Jr Developer jobs across the country as well as
+  various languages, environments, etc.
+  
+* Getting Sublime's Multiple Cursor Behavior in Emacs
+  
+  Keywords: [emacs,elisp,sublime]
+  
+  Describe how I got Sublime's multiple cursor functionality in Emacs.

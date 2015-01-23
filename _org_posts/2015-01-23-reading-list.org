@@ -1,0 +1,21 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil num:nil
+#+BEGIN_HTML
+---
+layout: page
+title: Reading List
+permalink: /reading_list/
+categories: personal
+tags: [reading,list]
+---
+#+END_HTML
+
+| Title                                    | Author               | Status  |
+|------------------------------------------+----------------------+---------|
+| A Man Without Country                    | John Steinbeck       | reading |
+| This Is Water                            | David Foster Wallace |         |
+| On The Road                              | Jack Kerouac         |         |
+| The Alchemist                            | Paulo Coelho         |         |
+| Simplicity Essays                        | Millburn & Nicodemus | reading |
+| (the book Q is reading about introverts) |                      |         |
