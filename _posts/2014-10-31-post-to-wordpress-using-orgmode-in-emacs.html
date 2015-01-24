@@ -1,0 +1,97 @@
+---
+layout: post
+title: Post to wordpress using Orgmode in Emacs
+excerpt: 
+categories: [blogging,development]
+tags: [emacs,orgmode,org2blog,wordpress]
+---
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Install dependencies</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+First we need to get the following dependencies. Note: when possible I
+like to add as git submodules, making it easier to keep code
+up-to-date.
+</p>
+
+<ul class="org-ul">
+<li>xml-rpc
+</li>
+<li>metaweblog.el
+</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="src src-sh"><span class="org-comment-delimiter"># </span><span class="org-comment">change to a directory where you keep third party elisp</span>
+<span class="org-builtin">cd</span> ~/.emacs.d/vendor
+<span class="org-comment-delimiter"># </span><span class="org-comment">download xml-rpc</span>
+wget https://launchpad.net/xml-rpc-el/trunk/1.6.8/+download/xml-rpc.el
+<span class="org-comment-delimiter"># </span><span class="org-comment">add metaweblog as a git submodule</span>
+git submodule add https://github.com/punchagan/metaweblog.git
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Install <span class="underline">org2blog</span></h2>
+<div class="outline-text-2" id="text-2">
+<div class="org-src-container">
+
+<pre class="src src-sh">git submodule add https://github.com/punchagan/org2blog.git
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">Setup a netrc file to handle login</h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+
+<pre class="src src-sh"><span class="org-builtin">cd</span> ~
+<span class="org-builtin">echo</span> <span class="org-string">"machine &lt;BLOGNAME&gt; login &lt;USERNAME&gt; password &lt;PASSWORD&gt;"</span> &gt;&gt; .netrc
+<span class="org-comment-delimiter"># </span><span class="org-comment">make sure only you can read this file</span>
+chmod 600 .netrc
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">Configure <span class="underline">org2blog</span></h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Put the following somewhere in your startup files.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-elisp"><span class="org-comment-delimiter">;; </span><span class="org-comment">load dependencies: XML-RPC + metaweblog</span>
+(add-to-list 'load-path (concat dotfiles-dir <span class="org-string">"vendor"</span>))
+(add-to-list 'load-path (concat dotfiles-dir <span class="org-string">"vendor/metaweblog"</span>))
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">load org2blog</span>
+(add-to-list 'load-path (concat dotfiles-dir <span class="org-string">"vendor/org2blog"</span>))
+(<span class="org-keyword">require</span> '<span class="org-constant">org2blog-autoloads</span>)
+
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">setup blogs</span>
+(<span class="org-keyword">require</span> '<span class="org-constant">netrc</span>)
+(setq blog (netrc-machine (netrc-parse <span class="org-string">"~/.netrc"</span>) <span class="org-string">"&lt;BLOGNAME&gt;"</span> t))
+(setq org2blog/wp-blog-alist
+      '((<span class="org-string">"&lt;BLOGNAME&gt;"</span>
+         <span class="org-builtin">:url</span> <span class="org-string">"http://BLOGURL/xmlrpc.php"</span>
+         <span class="org-builtin">:username</span> (netrc-get blog <span class="org-string">"login"</span>)
+         <span class="org-builtin">:password</span> (netrc-get blog <span class="org-string">"password"</span>)
+         <span class="org-builtin">:tags-as-categories</span> nil)
+        )
+      )
+
+(add-hook 'org-mode-hook 'org2blog/wp-mode)
+</pre>
+</div>
+</div>
+</div>

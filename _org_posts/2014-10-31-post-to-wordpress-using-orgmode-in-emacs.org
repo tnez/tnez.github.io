@@ -1,0 +1,82 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil num:nil
+#+BEGIN_HTML
+---
+layout: post
+title: Post to wordpress using Orgmode in Emacs
+excerpt: 
+categories: [blogging,development]
+tags: [emacs,orgmode,org2blog,wordpress]
+---
+#+END_HTML
+
+* Install dependencies
+
+First we need to get the following dependencies. Note: when possible I
+like to add as git submodules, making it easier to keep code
+up-to-date.
+
+- xml-rpc
+- metaweblog.el
+
+#+BEGIN_SRC sh
+
+# change to a directory where you keep third party elisp
+cd ~/.emacs.d/vendor
+# download xml-rpc
+wget https://launchpad.net/xml-rpc-el/trunk/1.6.8/+download/xml-rpc.el
+# add metaweblog as a git submodule
+git submodule add https://github.com/punchagan/metaweblog.git
+
+#+END_SRC
+
+* Install _org2blog_
+
+#+BEGIN_SRC sh
+
+git submodule add https://github.com/punchagan/org2blog.git
+
+#+END_SRC
+
+* Setup a netrc file to handle login
+
+#+BEGIN_SRC sh
+
+cd ~
+echo "machine <BLOGNAME> login <USERNAME> password <PASSWORD>" >> .netrc
+# make sure only you can read this file
+chmod 600 .netrc
+
+#+END_SRC
+
+* Configure _org2blog_
+
+Put the following somewhere in your startup files.
+
+#+BEGIN_SRC elisp
+
+;; load dependencies: XML-RPC + metaweblog
+(add-to-list 'load-path (concat dotfiles-dir "vendor"))
+(add-to-list 'load-path (concat dotfiles-dir "vendor/metaweblog"))
+
+;; load org2blog
+(add-to-list 'load-path (concat dotfiles-dir "vendor/org2blog"))
+(require 'org2blog-autoloads)
+
+
+;; setup blogs
+(require 'netrc)
+(setq blog (netrc-machine (netrc-parse "~/.netrc") "<BLOGNAME>" t))
+(setq org2blog/wp-blog-alist
+      '(("<BLOGNAME>"
+         :url "http://BLOGURL/xmlrpc.php"
+         :username (netrc-get blog "login")
+         :password (netrc-get blog "password")
+         :tags-as-categories nil)
+        )
+      )
+
+(add-hook 'org-mode-hook 'org2blog/wp-mode)
+
+#+END_SRC
