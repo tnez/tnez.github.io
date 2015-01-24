@@ -1,0 +1,106 @@
+---
+layout: post
+title: Simplifying git workflow with legit
+excerpt: 
+categories: [development,workflow]
+tags: [devtools,git,workflow]
+---
+
+<p>
+The following scenario happens to me on an almost daily basis:
+</p>
+
+<ol class="org-ol">
+<li>I am working on a project / post / idea.
+</li>
+<li>I run into an issue that is itself worthy of a dedicated new
+project / post / idea.
+</li>
+</ol>
+
+<p>
+I want to start working on the new issue as a stand alone project, but
+I also need to be able to jump right back into my current project as
+soon as I finish the new. This needs to be as seamless and failsafe as
+possible in order to keep my focus and productivity high while also
+preventing me from losing work.
+</p>
+
+<p>
+I am almost always working in the branch of a git repository, so what
+is actually happening is that I am:
+</p>
+
+<ol class="org-ol">
+<li>Stashing the changes in my current branch
+</li>
+<li>Creating a new branch (probably from my master branch).
+</li>
+<li>Checking out the new branch.
+</li>
+<li>Doing work.
+</li>
+<li>Committing work.
+</li>
+<li>Pushing work back to the master branch.
+</li>
+<li>Checking out the original branch.
+</li>
+<li>Resuming work.
+</li>
+</ol>
+
+<p>
+This looked like this&#x2026;
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh" id="workflow-with-vanilla-git"><span class="org-comment-delimiter"># </span><span class="org-comment">stash changes</span>
+git stash
+<span class="org-comment-delimiter"># </span><span class="org-comment">create a new branch based off master</span>
+git checkout master
+git branch new-issue
+<span class="org-comment-delimiter"># </span><span class="org-comment">do awesome work...</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">...</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">stage and commit awesome work</span>
+git commit -a -m <span class="org-string">"I did awesome work!"</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">merge awesome work back into master</span>
+git checkout master
+git merge new-issue
+<span class="org-comment-delimiter"># </span><span class="org-comment">remove new-issue branch</span>
+git branch -d new-issue
+<span class="org-comment-delimiter"># </span><span class="org-comment">switch back to our original working branch</span>
+git checkout orig-branch
+<span class="org-comment-delimiter"># </span><span class="org-comment">apply the work that we had previously stashed</span>
+git apply stash
+</pre>
+</div>
+
+<p>
+Not soooo bad I know, but I recently stumbled upon <a href="http://www.git-legit.org">legit</a> which
+simplifies the process. After installing <a href="http://www.git-legit.org">legit</a>, the process looks like
+this:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh" id="workflow-with-git-legit"><span class="org-comment-delimiter"># </span><span class="org-comment">stash changes and switch to new branch based off master</span>
+git sprout master new-issue
+<span class="org-comment-delimiter"># </span><span class="org-comment">do awesome work...</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">...</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">stage and commit awesome work</span>
+git commit -a -m <span class="org-string">"I did awesome work!"</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">merge awesome work back into master and remove new-issue branch</span>
+git graft new-issue master
+<span class="org-comment-delimiter"># </span><span class="org-comment">witch back to our original working branch and apply previous work</span>
+git switch orig-branch
+</pre>
+</div>
+
+<p>
+The difference may seem minimal, but any simplification that can be
+applied to a workflow that is used on a daily basis is worth it in my
+opinion. Switching ideas should be a muscle memory burned into our
+fingers rather than something we need to stop and think about!
+</p>

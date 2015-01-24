@@ -1,0 +1,87 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil num:nil
+#+BEGIN_HTML
+---
+layout: post
+title: Simplifying git workflow with legit
+excerpt: 
+categories: [development,workflow]
+tags: [devtools,git,workflow]
+---
+#+END_HTML
+
+The following scenario happens to me on an almost daily basis:
+
+1) I am working on a project / post / idea.
+2) I run into an issue that is itself worthy of a dedicated new
+   project / post / idea.
+
+I want to start working on the new issue as a stand alone project, but
+I also need to be able to jump right back into my current project as
+soon as I finish the new. This needs to be as seamless and failsafe as
+possible in order to keep my focus and productivity high while also
+preventing me from losing work.
+
+I am almost always working in the branch of a git repository, so what
+is actually happening is that I am:
+
+1) Stashing the changes in my current branch
+2) Creating a new branch (probably from my master branch).
+3) Checking out the new branch.
+4) Doing work.
+5) Committing work.
+6) Pushing work back to the master branch.
+7) Checking out the original branch.
+8) Resuming work.
+
+This looked like this...
+
+#+NAME: workflow-with-vanilla-git
+#+BEGIN_SRC sh :eval no
+
+  # stash changes
+  git stash
+  # create a new branch based off master
+  git checkout master
+  git branch new-issue
+  # do awesome work...
+  # ...
+  # stage and commit awesome work
+  git commit -a -m "I did awesome work!"
+  # merge awesome work back into master
+  git checkout master
+  git merge new-issue
+  # remove new-issue branch
+  git branch -d new-issue
+  # switch back to our original working branch
+  git checkout orig-branch
+  # apply the work that we had previously stashed
+  git apply stash
+
+#+END_SRC
+
+Not soooo bad I know, but I recently stumbled upon [[http://www.git-legit.org][legit]] which
+simplifies the process. After installing [[http://www.git-legit.org][legit]], the process looks like
+this:
+
+#+NAME: workflow-with-git-legit
+#+BEGIN_SRC sh :eval no
+
+  # stash changes and switch to new branch based off master
+  git sprout master new-issue
+  # do awesome work...
+  # ...
+  # stage and commit awesome work
+  git commit -a -m "I did awesome work!"
+  # merge awesome work back into master and remove new-issue branch
+  git graft new-issue master
+  # witch back to our original working branch and apply previous work
+  git switch orig-branch
+
+#+END_SRC
+
+The difference may seem minimal, but any simplification that can be
+applied to a workflow that is used on a daily basis is worth it in my
+opinion. Switching ideas should be a muscle memory burned into our
+fingers rather than something we need to stop and think about!
