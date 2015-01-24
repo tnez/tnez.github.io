@@ -1,0 +1,20 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil
+#+BEGIN_HTML
+---
+layout: post
+title: Keeping my Github account clean and up-to-date
+excerpt: 
+categories: 
+tags: 
+---
+#+END_HTML
+
+My [[http://github.com/tnez][github account]] has become bloated with out-of-date repositories and
+projects that were abandoned before completion. In the spirit of New
+Year's resolutions, I vow to keep my [[http://github.com/tnez][github]] clean!
+
+#+CAPTION: Proposed process to keep github clean and up-to-date
+#+NAME: github-clean
+[[file:{{site.url}}/public/media/2014-12-23-flowchart.png]]
