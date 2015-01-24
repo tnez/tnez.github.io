@@ -1,0 +1,221 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil num:nil
+#+BEGIN_HTML
+---
+layout: post
+title: Generating representative streamlines for the human connectome
+excerpt: 
+categories: [neuroimaging,development,data-analysis]
+tags: [connectome,tractography,python]
+---
+#+END_HTML
+
+* Get and inspect data
+** Diffusion template
+
+For diffusion data we choose to use FA and tensor data from the [[http://www.nitrc.org/projects/iit2/][IIT
+Human Brain ATlas (v.3.1)]] [[http://www.sciencedirect.com/science/article/pii/S1053811914000202][(2014 NeuroImage Paper)]], which includes
+template diffusion data generated from 72 healthy human
+subjects. *In the future we may wish to repeat this process using
+the supplied HARDI data rather than DTI.*
+
+#+NAME: download-diffusion-data
+#+BEGIN_SRC sh :eval no
+   wget http://www.nitrc.org/frs/download.php/6898/IITmean_FA.nii.gz -O iit_mean_fa.nii.gz
+   wget http://www.nitrc.org/frs/download.php/6904/IITmean_tensor.nii.gz -O iit_mean_tensor.nii.gz
+#+END_SRC
+
+#+RESULTS: download-diffusion-data
+
+** Regions of Interest
+
+For our immediate purpose, we want to generate representative
+streamlines that relate to regions of interest (ROIs) that were
+used in a previous study. We are using the JHU ROIs packaged in
+[[https://github.com/neurolabusc/NiiStat][NiiStat]]. The image contains 189 regions of interest all labeled
+with corresponding integers.
+
+#+NAME: download-roi-data
+#+BEGIN_SRC sh :eval no
+   wget https://github.com/neurolabusc/NiiStat/blob/master/roi/jhu.nii?raw=true -O jhu_roi.nii
+   # we're using compressed NIfTI format on our system... so let's go with that
+   gzip jhu_roi.nii
+#+END_SRC
+
+#+RESULTS: download-roi-data
+
+* Register regions of interest to ICBM space
+
+Upon examination of the images, it seems that that regions of
+interest are not in standard space - they seem to be centered in the
+same space but seem smaller.
+
+#+CAPTION: ROIs seem smaller than FA image although centered in same space
+#+NAME: fig: roi-fa-orig
+# [[{{ site.url }}/public/media/roi_fa_orig.png]]
+[[file:{{site.url}}/public/media/roi_fa_orig.png]]
+
+
+Registering regions of interest to a given space presents a
+challenge because the intensities in the image correspond to a label
+rather than useful information for a typical registration
+algorithm. In this case, our best bet is to register the silhouettes
+of the two images. We can binarize each image and seek a linear
+mapping between the two.
+
+#+NAME: register-roi-to-fa
+#+BEGIN_SRC sh :eval no
+    # binarize the images
+    fslmaths iit_mean_fa -bin iit_mean_fa_mask -odt char
+    fslmaths jhu_roi -bin jhu_roi_mask -odt char
+    # find a linear mapping from jhu-roi --> IITmean_FA
+    flirt -in jhu_roi-mask -ref iit_mean_fa_mask -omat jhu_to_icbm.mat
+    # apply the registration (using nearest neighbor interpolation because
+    # we need to preserve the integer labels)
+    flirt -in jhu_roi -ref iit_mean_fa -init jhu_to_icbm.mat -applyxfm -interp nearestneighbour -o jhu_roi_to_icbm
+#+END_SRC
+
+#+RESULTS: register-roi-to-fa
+
+The resulting ROIs map much better to the FA in ICBM space.
+
+#+CAPTION: ROIs now map well to FA image
+#+NAME: fig: roi-fa-after-reg
+[[file:{{site.url}}/public/media/roi_fa_orig.png]]
+
+* Streamline tracking
+
+We can use [[trackvis.org/dtk/][diffusion toolkit]] to generate streamlines. We only need
+to provide the diffusion tensors and a mask to designate valid seed
+and tracking voxels. We will use an angle threshold of 50, an FA
+threshold of 0.2. Both x and y directions will need to be inverted
+during tracking - this is typical for LAS oriented data.
+
+#+BEGIN_SRC sh :results none :eval no
+    dti_tracker iit_mean iit_streamlines.trk -at 50 -m iit_mean_fa.nii.gz 0.2 1 -ix -iy -it nii.gz
+#+END_SRC
+
+We now have streamlines generated in ICBM space. We can see them
+here, overlayed on our FA volume.
+
+#+CAPTION: Streamlines overlayed on FA
+#+NAME: fig: iit-streamlines
+[[file:{{site.url}}/public/media/iit_streamlines.png]]
+
+* Compile Connectome
+
+#+NAME: generate-connectivity-matrix :results file :exports both :eval no
+#+BEGIN_SRC python
+
+  # using the previously prepared ROI image, and streamlines, generate a
+  # "connectome" by counting the number of streamlines that start in
+  # region *i* and terminate in region *j* for all combinations of
+  # regions *i* and *j*.
+  import muscip.connectome as mcon
+  C = mcon.TNDtkConnectome(fibers='iit_streamlines.trk',
+                           min_fiber_length=5.,
+                           max_fiber_length=500.,
+                           roi_image='jhu_roi_to_icbm.nii.gz')
+  C.generate_network() # this may take a long time!!!
+  # save the connectome so we don't need to re-compile
+  C.write('iit-jhu-ctome')
+
+  # show the connection matrix for purpose of QA
+  import numpy as np
+  import matplotlib
+  matplotlib.use('Agg')
+  import matplotlib.pyplot as plt
+  fig = plt.figure('Connection Matrix')
+  plt.imshow(np.log10(1+C.matrix_for_key('fiber_count')))
+  plt.colorbar()
+  fig.tight_layout()
+  plt.savefig('img/iit_jhu_ctome_cmat.png')
+  'img/iit_jhu_ctome_cmat.png'
+
+#+END_SRC
+
+#+CAPTION: Connectivity Matrix
+#+NAME: fig: connectivity-matrix
+[[file:{{site.url}}/public/media/iit_jhu_ctome_cmat.png]]
+
+* Generate centroid
+
+We start by taking each set of fibers belonging to a pair of regions
+in the connectome, using a bit of code in [[nipy.org/dipy][dipy]] to downsample all of
+the streamlines in the set in such a way that they have a fixed
+number of points (in our case 18, as suggested in [[http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3931231/][Garyfallidis
+2014]]).
+
+To get an idea of what is going on, let's visualize the process of
+generating the centroid for the set of streamlines connecting
+regions 1 and 2 (superior frontal gyrus of the left and right
+hemispheres respectively).
+
+Note that our method is robust to tracking artifacts in our example
+(these connections should probably be contained entirely within the
+corpus callosum - the streamlines running down the corticospinal
+tract and crossing at the pons are probably not real).
+
+#+NAME: centroid-generation-example 
+#+BEGIN_SRC python :eval no
+    # setup visualization
+    from dipy.viz import fvtk
+    ren = fvtk.ren()
+    fvtk.clear(ren)
+    ren.SetBackground(1,1,1)
+
+    # read in previously compiled connectome
+    import muscip.connectome as mcon
+    C = mcon.read('iit-jhu-ctome')
+
+    # select the set of streamlines connecting regions [1](left superior
+    # frontal gyrus) to [2](right superior frontal gyrus)
+    S = C.network[1][2]['fibers']
+
+    # downsample the streamlines to 18 points (Garyfallidis 2014) and
+    # store them in a new array... but while we're doing this check if we
+    # need to flip the streamline because it could be started in region 1
+    # or 2, but to do comparisons, we need to standardize by making them
+    # all oriented similar (although which orientation we choose is not
+    # important)
+    from dipy.tracking.metrics import downsample
+    import numpy as np
+    NUM_POINTS = 18
+    S18 = np.ndarray((len(S), NUM_POINTS, 3), dtype=np.float32)
+    # grab the first streamline and downsample
+    first_sl = downsample(S[0], NUM_POINTS)
+    # define a function to determine the distance between this first
+    # streamline and any other given streamline
+    cumdist = lambda sl: np.sqrt(np.sum((sl-first_sl)**2))
+    # for each streamline in the set
+    for idx, sl in enumerate(S):
+        sl = downsample(sl, NUM_POINTS)
+        # reverse the streamline orientation if needed
+        if cumdist(sl) > cumdist(sl[::-1]):
+            sl = sl[::-1]
+        # and store in the downsampled streamlines
+        S18[idx] = sl
+
+    # add the set of downsampled streamlines to the scene
+    fvtk.add(ren, fvtk.streamtube(S18, fvtk.colors.grey, opacity=0.01))
+
+    # calculate the representative streamline for this set by taking the
+    # median xyz the set for all 18 points
+    rep_sl = np.median(S18, axis=0)
+
+    # add the representative streamiline to the scene and make it stand
+    # out!
+    fvtk.add(ren, fvtk.streamtube([rep_sl], fvtk.colors.red, linewidth=2.5))
+
+    # save out the image
+    fvtk.show(ren, size=(600,600), title='representative-streamline-example')
+
+#+END_SRC
+
+#+CAPTION: Streamlines between superior frontal gyri in grey, median streamline in red
+#+NAME: fig: representative-streamline-example
+[[file:{{site.url}}/public/media/representative-streamline-example.png]]
+
+This process is then extrapolated to process every combination of
+regions where connections exist.

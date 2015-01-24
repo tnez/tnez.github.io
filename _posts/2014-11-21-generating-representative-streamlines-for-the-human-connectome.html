@@ -1,0 +1,270 @@
+---
+layout: post
+title: Generating representative streamlines for the human connectome
+excerpt: 
+categories: [neuroimaging,development,data-analysis]
+tags: [connectome,tractography,python]
+---
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Get and inspect data</h2>
+<div class="outline-text-2" id="text-1">
+</div><div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1">Diffusion template</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+For diffusion data we choose to use FA and tensor data from the <a href="http://www.nitrc.org/projects/iit2/">IIT
+Human Brain ATlas (v.3.1)</a> <a href="http://www.sciencedirect.com/science/article/pii/S1053811914000202">(2014 NeuroImage Paper)</a>, which includes
+template diffusion data generated from 72 healthy human
+subjects. <b>In the future we may wish to repeat this process using
+the supplied HARDI data rather than DTI.</b>
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh" id="download-diffusion-data">wget http://www.nitrc.org/frs/download.php/6898/IITmean_FA.nii.gz -O iit_mean_fa.nii.gz
+wget http://www.nitrc.org/frs/download.php/6904/IITmean_tensor.nii.gz -O iit_mean_tensor.nii.gz
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2">Regions of Interest</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+For our immediate purpose, we want to generate representative
+streamlines that relate to regions of interest (ROIs) that were
+used in a previous study. We are using the JHU ROIs packaged in
+<a href="https://github.com/neurolabusc/NiiStat">NiiStat</a>. The image contains 189 regions of interest all labeled
+with corresponding integers.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh" id="download-roi-data">wget https://github.com/neurolabusc/NiiStat/blob/master/roi/jhu.nii?<span class="org-variable-name">raw</span>=true -O jhu_roi.nii
+<span class="org-comment-delimiter"># </span><span class="org-comment">we're using compressed NIfTI format on our system... so let's go with that</span>
+gzip jhu_roi.nii
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Register regions of interest to ICBM space</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Upon examination of the images, it seems that that regions of
+interest are not in standard space - they seem to be centered in the
+same space but seem smaller.
+</p>
+
+
+<div class="figure">
+<p><img src="{{site.url}}/public/media/roi_fa_orig.png" alt="roi_fa_orig.png" />
+</p>
+</div>
+
+
+<p>
+Registering regions of interest to a given space presents a
+challenge because the intensities in the image correspond to a label
+rather than useful information for a typical registration
+algorithm. In this case, our best bet is to register the silhouettes
+of the two images. We can binarize each image and seek a linear
+mapping between the two.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh" id="register-roi-to-fa"><span class="org-comment-delimiter"># </span><span class="org-comment">binarize the images</span>
+fslmaths iit_mean_fa -bin iit_mean_fa_mask -odt char
+fslmaths jhu_roi -bin jhu_roi_mask -odt char
+<span class="org-comment-delimiter"># </span><span class="org-comment">find a linear mapping from jhu-roi --&gt; IITmean_FA</span>
+flirt -in jhu_roi-mask -ref iit_mean_fa_mask -omat jhu_to_icbm.mat
+<span class="org-comment-delimiter"># </span><span class="org-comment">apply the registration (using nearest neighbor interpolation because</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">we need to preserve the integer labels)</span>
+flirt -in jhu_roi -ref iit_mean_fa -init jhu_to_icbm.mat -applyxfm -interp nearestneighbour -o jhu_roi_to_icbm
+</pre>
+</div>
+
+<p>
+The resulting ROIs map much better to the FA in ICBM space.
+</p>
+
+
+<div id="fig:-roi-fa-after-reg" class="figure">
+<p><img src="{{site.url}}/public/media/roi_fa_orig.png" alt="roi_fa_orig.png" />
+</p>
+<p><span class="figure-number">Figure 2:</span> ROIs now map well to FA image</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">Streamline tracking</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+We can use <i>diffusion toolkit</i> to generate streamlines. We only need
+to provide the diffusion tensors and a mask to designate valid seed
+and tracking voxels. We will use an angle threshold of 50, an FA
+threshold of 0.2. Both x and y directions will need to be inverted
+during tracking - this is typical for LAS oriented data.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">dti_tracker iit_mean iit_streamlines.trk -at 50 -m iit_mean_fa.nii.gz 0.2 1 -ix -iy -it nii.gz
+</pre>
+</div>
+
+<p>
+We now have streamlines generated in ICBM space. We can see them
+here, overlayed on our FA volume.
+</p>
+
+
+<div id="fig:-iit-streamlines" class="figure">
+<p><img src="{{site.url}}/public/media/iit_streamlines.png" alt="iit_streamlines.png" />
+</p>
+<p><span class="figure-number">Figure 3:</span> Streamlines overlayed on FA</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4">Compile Connectome</h2>
+<div class="outline-text-2" id="text-4">
+<div class="org-src-container">
+
+<pre class="src src-python" id="generate-connectivity-matrix-:results-file-:exports-both-:eval-no"><span class="org-comment-delimiter"># </span><span class="org-comment">using the previously prepared ROI image, and streamlines, generate a</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">"connectome" by counting the number of streamlines that start in</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">region *i* and terminate in region *j* for all combinations of</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">regions *i* and *j*.</span>
+<span class="org-keyword">import</span> muscip.connectome <span class="org-keyword">as</span> mcon
+<span class="org-variable-name">C</span> = mcon.TNDtkConnectome(fibers=<span class="org-string">'iit_streamlines.trk'</span>,
+                         min_fiber_length=5.,
+                         max_fiber_length=500.,
+                         roi_image=<span class="org-string">'jhu_roi_to_icbm.nii.gz'</span>)
+C.generate_network() <span class="org-comment-delimiter"># </span><span class="org-comment">this may take a long time!!!</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">save the connectome so we don't need to re-compile</span>
+C.write(<span class="org-string">'iit-jhu-ctome'</span>)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">show the connection matrix for purpose of QA</span>
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> matplotlib
+matplotlib.use(<span class="org-string">'Agg'</span>)
+<span class="org-keyword">import</span> matplotlib.pyplot <span class="org-keyword">as</span> plt
+<span class="org-variable-name">fig</span> = plt.figure(<span class="org-string">'Connection Matrix'</span>)
+plt.imshow(np.log10(1+C.matrix_for_key(<span class="org-string">'fiber_count'</span>)))
+plt.colorbar()
+fig.tight_layout()
+plt.savefig(<span class="org-string">'img/iit_jhu_ctome_cmat.png'</span>)
+<span class="org-string">'img/iit_jhu_ctome_cmat.png'</span>
+</pre>
+</div>
+
+
+<div id="fig:-connectivity-matrix" class="figure">
+<p><img src="{{site.url}}/public/media/iit_jhu_ctome_cmat.png" alt="iit_jhu_ctome_cmat.png" />
+</p>
+<p><span class="figure-number">Figure 4:</span> Connectivity Matrix</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5">Generate centroid</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+We start by taking each set of fibers belonging to a pair of regions
+in the connectome, using a bit of code in <i>dipy</i> to downsample all of
+the streamlines in the set in such a way that they have a fixed
+number of points (in our case 18, as suggested in <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3931231/">Garyfallidis
+2014</a>).
+</p>
+
+<p>
+To get an idea of what is going on, let's visualize the process of
+generating the centroid for the set of streamlines connecting
+regions 1 and 2 (superior frontal gyrus of the left and right
+hemispheres respectively).
+</p>
+
+<p>
+Note that our method is robust to tracking artifacts in our example
+(these connections should probably be contained entirely within the
+corpus callosum - the streamlines running down the corticospinal
+tract and crossing at the pons are probably not real).
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python" id="centroid-generation-example"><span class="org-comment-delimiter"># </span><span class="org-comment">setup visualization</span>
+<span class="org-keyword">from</span> dipy.viz <span class="org-keyword">import</span> fvtk
+<span class="org-variable-name">ren</span> = fvtk.ren()
+fvtk.clear(ren)
+ren.SetBackground(1,1,1)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">read in previously compiled connectome</span>
+<span class="org-keyword">import</span> muscip.connectome <span class="org-keyword">as</span> mcon
+<span class="org-variable-name">C</span> = mcon.read(<span class="org-string">'iit-jhu-ctome'</span>)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">select the set of streamlines connecting regions [1](left superior</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">frontal gyrus) to [2](right superior frontal gyrus)</span>
+<span class="org-variable-name">S</span> = C.network[1][2][<span class="org-string">'fibers'</span>]
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">downsample the streamlines to 18 points (Garyfallidis 2014) and</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">store them in a new array... but while we're doing this check if we</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">need to flip the streamline because it could be started in region 1</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">or 2, but to do comparisons, we need to standardize by making them</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">all oriented similar (although which orientation we choose is not</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">important)</span>
+<span class="org-keyword">from</span> dipy.tracking.metrics <span class="org-keyword">import</span> downsample
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-variable-name">NUM_POINTS</span> = 18
+<span class="org-variable-name">S18</span> = np.ndarray((<span class="org-builtin">len</span>(S), NUM_POINTS, 3), dtype=np.float32)
+<span class="org-comment-delimiter"># </span><span class="org-comment">grab the first streamline and downsample</span>
+<span class="org-variable-name">first_sl</span> = downsample(S[0], NUM_POINTS)
+<span class="org-comment-delimiter"># </span><span class="org-comment">define a function to determine the distance between this first</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">streamline and any other given streamline</span>
+<span class="org-variable-name">cumdist</span> = <span class="org-keyword">lambda</span> sl: np.sqrt(np.<span class="org-builtin">sum</span>((sl-first_sl)**2))
+<span class="org-comment-delimiter"># </span><span class="org-comment">for each streamline in the set</span>
+<span class="org-keyword">for</span> idx, sl <span class="org-keyword">in</span> <span class="org-builtin">enumerate</span>(S):
+    <span class="org-variable-name">sl</span> = downsample(sl, NUM_POINTS)
+    <span class="org-comment-delimiter"># </span><span class="org-comment">reverse the streamline orientation if needed</span>
+    <span class="org-keyword">if</span> cumdist(sl) &gt; cumdist(sl[::-1]):
+        <span class="org-variable-name">sl</span> = sl[::-1]
+    <span class="org-comment-delimiter"># </span><span class="org-comment">and store in the downsampled streamlines</span>
+    <span class="org-variable-name">S18</span>[idx] = sl
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">add the set of downsampled streamlines to the scene</span>
+fvtk.add(ren, fvtk.streamtube(S18, fvtk.colors.grey, opacity=0.01))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">calculate the representative streamline for this set by taking the</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">median xyz the set for all 18 points</span>
+<span class="org-variable-name">rep_sl</span> = np.median(S18, axis=0)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">add the representative streamiline to the scene and make it stand</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">out!</span>
+fvtk.add(ren, fvtk.streamtube([rep_sl], fvtk.colors.red, linewidth=2.5))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">save out the image</span>
+fvtk.show(ren, size=(600,600), title=<span class="org-string">'representative-streamline-example'</span>)
+</pre>
+</div>
+
+
+<div id="fig:-representative-streamline-example" class="figure">
+<p><img src="{{site.url}}/public/media/representative-streamline-example.png" alt="representative-streamline-example.png" />
+</p>
+<p><span class="figure-number">Figure 5:</span> Streamlines between superior frontal gyri in grey, median streamline in red</p>
+</div>
+
+<p>
+This process is then extrapolated to process every combination of
+regions where connections exist.
+</p>
+</div>
+</div>
