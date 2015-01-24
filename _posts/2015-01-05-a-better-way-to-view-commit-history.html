@@ -1,0 +1,92 @@
+---
+layout: post
+title: A better way to view commit history
+excerpt: 
+categories: 
+tags: 
+---
+
+<p>
+I recently came across a better way to view my commit history in a git
+repository while reading <a href="http://gitimmersion.com/lab_11.html">this tutorial</a>.
+</p>
+
+<p>
+By adding this alias to your <b>.gitconfig</b> file&#x2026;
+</p>
+
+<pre class="example">
+[alias]
+  hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+</pre>
+
+<p>
+I change the way I view my git commit activity from this&#x2026;
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">git log | head -25
+</pre>
+</div>
+
+<pre class="example">
+commit 7083ea929577656618a6bccec8af95bf2142bb8e
+Author: Travis Nesland &lt;tnesland@gmail.com&gt;
+Date:   Tue Dec 30 23:07:37 2014 -0500
+
+    Write post re: git hist alias.
+
+commit 9cc454d27e3316d143e04ed76950852d77d7b634
+Merge: d2de6a1 a803af2
+Author: Travis Nesland &lt;tnesland@gmail.com&gt;
+Date:   Tue Dec 30 22:28:09 2014 -0500
+
+    Merge represenative streamlines after removing large files.
+
+commit a803af21c92191135b13030d65844dc3d425d10a
+Author: Travis Nesland &lt;tnesland@gmail.com&gt;
+Date:   Tue Dec 30 22:27:15 2014 -0500
+
+    Remove large files.
+
+commit d2de6a11c268fbd397b07c7d177677db68666d91
+Merge: 29390bb c398767
+Author: Travis Nesland &lt;tnesland@gmail.com&gt;
+Date:   Tue Dec 30 21:33:30 2014 -0500
+
+    Merge.
+</pre>
+
+<p>
+to this&#x2026;
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">git hist | head -20
+</pre>
+</div>
+
+<pre class="example">
+. 7083ea9 2014-12-30 | Write post re: git hist alias. (HEAD, git-hist-alias) [Travis Nesland]
+.   9cc454d 2014-12-30 | Merge represenative streamlines after removing large files. [Travis Nesland]
+|\  
+| . a803af2 2014-12-30 | Remove large files. (representative-streamlines) [Travis Nesland]
+. |   d2de6a1 2014-12-30 | Merge. [Travis Nesland]
+|\ \  
+| |/  
+| .   c398767 2014-12-30 | Updating data. [Travis Nesland]
+| |\  
+| | . e96cf04 2014-11-21 | Post regarding representative streamlines. (origin/representative-streamlines) [Travis Nesland]
+| . | d3c3153 2014-12-30 | Commit data for representative streamlines post. [Travis Nesland]
+| |/  
+| . a830e0f 2014-11-17 | . generating-representative-streamlines/generating-representative-streamlines-for-the-human-connectome.org: Continue work. [Travis Nesland]
+| . 7120c2b 2014-11-14 | Continue work. [Travis Nesland]
+| . 8130da9 2014-11-12 | Generate figures. [Travis Nesland]
+| . 6f0943e 2014-11-12 | Fix file reference. [Travis Nesland]
+| . b580a6b 2014-11-12 | . generating-representative-streamlines/generating-representative-streamlines-for-the-human-connectome.org: Continue work on streamline tracking. [Travis Nesland]
+| . 425a00c 2014-11-10 | Begin work on representative streamline post. [Travis Nesland]
+. |   29390bb 2014-12-23 | Merge branch 'github-clean' (origin/master, origin/HEAD) [Travis Nesland]
+|\ \
+</pre>
