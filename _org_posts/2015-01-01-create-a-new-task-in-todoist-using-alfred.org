@@ -1,0 +1,210 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil num:nil
+#+BEGIN_HTML
+---
+layout: post
+title: Create a new task in Todoist using Alfred
+excerpt: 
+categories: 
+tags: 
+---
+#+END_HTML
+
+* Motivation
+
+  I recently made the switch back to [[http://www.apple.com/osx/][Apple OSX]] on my laptop. Since
+  doing so I have enjoyed using [[http://www.alfredapp.com/][Alfred]] to streamline my
+  productivity. I also use [[http://todoist.com][Todoist]] for my task management needs - it
+  is simple, pretty, and cross-platform. The [[http://todoist.com/mac][Todoist OSX application]]
+  provides the ability to quickly add tasks via a hot-key
+  combination. But I like to keep things simple. Ideally I would like
+  one application to serve as my proxy to all things productivity - I
+  would like that application to be [[http://www.alfredapp.com][Alfred]]. So naturally this leads to
+  the question of how to add a new task [[http://todoist.com][Todoist]] via [[http://www.alfredapp.com][Alfred]].
+
+  [[http://alfredapp.com][Alfred]] provides the ability to create custom workflows - *AWESOME!*
+  This is exactly what I need. What I want is to...
+
+  1. Pull up [[http://www.alfredapp.com][Alfred]] using my predefined hot-key combo.
+  2. Use a simple keyword (*t* followed by a space followed by *enter*)
+     to indicate that I want to add a task to my [[http://todoist.com][Todoist]]
+  3. Enter my task content.
+  4. Hit *enter* one more time to send my shiny new task up to the
+     cloud!
+
+* Requirements
+
+  - [[http://todoist.com][Todoist]]
+  - [[http://www.alfredapp.com][Alfred]]
+  - [[http://curl.haxx.se/][cURL]] - should already be there
+     #+BEGIN_SRC sh :exports both :results output replace
+       which curl
+     #+END_SRC
+     #+RESULTS:
+     : /usr/bin/curl
+
+* Implementation
+
+** Create a new task using the [[todoist.com/API/#/addItem][Todoist API]]
+
+   Use [[http://curl.haxx.se/][cURL]] to make a call to [[http://todoist.com/API/#/API/addItem][Todoist's API]] to add a new item. I need
+   to provide the *content* of the new task along with my user
+   specific *API_TOKEN*. The *API_TOKEN* can be found in the settings
+   of your [[todoist.com][Todoist]] application.
+
+   #+CAPTION: Accessing todoist settings
+   [[file:{{site.url}}/public/media/2015-01-01-todoist-settings-01.png]]
+
+   #+CAPTION: Finding my API_TOKEN
+   [[file:{{site.url}}/public/media/2015-01-01-todoist-settings-02.png]]
+
+   Making the call to [[http://todoist.com/API/#/API/addItem][Todoist's API]] to add a new item.
+
+   #+BEGIN_SRC sh :exports code
+     # post a new note with given conent to todoist via API
+     # NOTE: Todoist syntax is respected -- see label and priority below
+     curl -X POST -d 'content=my shiny new task @mylabel !p1' \
+          -d 'token=my-api-token' https://todoist.com/API/additem
+   #+END_SRC
+
+** Creating [[http://www.alfredapp.com][Alfred]] workflow
+
+   Invoke Alfred's preferences menu.
+
+   [[file:{{site.url}}/public/media/2015-01-01-invoke-alfred-pref.png]]
+
+   Create a new *Blank Workflow*.
+
+   [[file:{{site.url}}/public/media/2015-01-01-pref01.png]]
+   [[file:{{site.url}}/public/media/2015-01-01-workflow-details.png]]
+
+   Create a new *Keyword Input*
+
+   [[file:{{site.url}}/public/media/2015-01-01-add-new-component.png]]
+   [[file:{{site.url}}/public/media/2015-01-01-keyword-input-01.png]]
+   [[file:{{site.url}}/public/media/2015-01-01-keyword-input-02.png]]
+
+   Create a new *Run Script Action*
+
+   [[file:{{site.url}}/public/media/2015-01-01-add-script-action-01.png]]
+
+   And add the following content to the script action. Note the use of
+   *{query}* to grab the content from our keyword trigger.
+
+   #+BEGIN_SRC sh :exports code :eval no
+      # Add a new task to the default project of my Todoist
+      # ------------------------------------------------------------
+
+      # Todoist API token (this can be found in Todoist account info)
+      API_TOKEN=my-api-token
+
+      # grab the new task content
+      new_task_content="{query}"
+
+      # post a new note with given conent to todoist via API
+      # NOTE: Todoist syntax is respected -- see label and priority below
+      curl -X POST -d "content=$new_task_content !p1" \
+           -d "token=$API_TOKEN" https://todoist.com/API/additem
+
+      exit 0
+
+    #+END_SRC
+
+   Also, be sure to uncheck all escaping options - if this is not done
+   you will end up with a bunch of backslashes in your task content.
+
+   [[file:{{site.url}}/public/media/2015-01-01-add-script-action-02.png]]
+
+   Runn the workflow
+
+    1. Invoke [[alfredapp.com][Alfred]] with your predefined hot-key.
+    2. Enter your keyword (in our case *t*) followed by a *space* and
+       hit *enter*.
+    3. Type your task content including any desired [[todoist.com/Help][Todoist defined
+       syntax or formatting]] and hit *enter* when done.
+
+    [[file:{{site.url}}/public/media/2015-01-01-run-workflow.png]]
+
+* A little Extra
+
+  So this works great! I can add tasks to [[todoist.com][Todoist]] right from [[alfredapp.com][Alfred]]
+  just like I want! The only thing missing is confirmation that the
+  task was successfully added to [[todoist.com][Todoist]], or a warning if the task
+  could not be posted.
+
+  When we successfully post the task we get an output similar to this:
+
+  #+BEGIN_EXAMPLE
+    {
+     "due_date": null
+     "assigned_by_uid": XXXXXXX
+     "is_archived": 0
+     "labels": []
+     "sync_id": null
+     "in_history": 0
+     "has_notifications": 0
+     "date_added": "Fri 02 Jan 2015 02:07:04 +0000"
+     "indent": 1
+     "children": null
+     "content": "my shiny new task"
+     "is_deleted": 0
+     "user_id": XXXXXXX
+     "due_date_utc": null
+     "id": XXXXXXXX
+     "priority": 1
+     "item_order": 4
+     "responsible_uid": null
+     "project_id": XXXXXXXXX
+     "collapsed": 0
+     "checked": 0
+     "date_string": ""
+    }
+  #+END_EXAMPLE
+
+  Given this, I will assume that a successful post is confirmed if the
+  first character of the returned string is *{* and the last character
+  is *}*.
+
+  I can modify my script to check for success based on this
+  assumption.
+
+  #+BEGIN_SRC sh :exports code :eval no
+    # Add a new task to the default project of my Todoist
+    # ------------------------------------------------------------
+
+    # Todoist API token (this can be found in Todoist account info)
+    API_TOKEN=my-api-token
+
+    # grab the new task content
+    new_task_content="{query}"
+
+    # post a new note with given content to todoist via API
+    # NOTE: Todoist syntax is respected -- see label and priority below
+    result=$(curl -X POST -d "content=$new_task_content !p1" \
+                  -d "token=$API_TOKEN" https://todoist.com/API/additem)
+
+    # get the first and last characters of the result
+    first_char=${result:0:1}
+    last_char=${result: -1}
+
+    # output the appropriate message given the result
+    exit_status=0
+    if [[ $first_char == "{" && $last_char == "}" ]]; then
+        echo "New task created!"
+    else
+        echo "Error encountered whilst trying to create new task"
+        exit_status=1
+    fi
+
+    exit $exit_status
+  #+END_SRC
+
+  Create a new *Post Notification Output*.
+
+  [[file:{{site.url}}/public/media/2015-01-01-post-notification-output-01.png]]
+  [[file:{{site.url}}/public/media/2015-01-01-post-notification-output-02.png]]
+
+  My finished workflow.
+
+  [[file:{{site.url}}/public/media/2015-01-01-finished-workflow.png]]
