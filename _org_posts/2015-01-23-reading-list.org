@@ -11,11 +11,11 @@ tags: [reading,list]
 ---
 #+END_HTML
 
-| Title                                    | Author               | Status  |
-|------------------------------------------+----------------------+---------|
-| A Man Without Country                    | John Steinbeck       | reading |
-| This Is Water                            | David Foster Wallace |         |
-| On The Road                              | Jack Kerouac         |         |
-| The Alchemist                            | Paulo Coelho         |         |
-| Simplicity Essays                        | Millburn & Nicodemus | reading |
-| (the book Q is reading about introverts) |                      |         |
+| Title                             | Author               | Status  |
+|-----------------------------------+----------------------+---------|
+| A Man Without Country             | John Steinbeck       | reading |
+| This Is Water                     | David Foster Wallace |         |
+| On The Road                       | Jack Kerouac         |         |
+| The Alchemist                     | Paulo Coelho         |         |
+| Simplicity Essays                 | Millburn & Nicodemus | reading |
+| Quiet: The Power of Introverts... | Susan Cain           |         |
