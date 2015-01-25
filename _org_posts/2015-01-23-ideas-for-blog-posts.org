@@ -8,6 +8,7 @@ title: Ideas For Blog Posts
 permalink: /ideas/
 categories: blogging
 tags: ideas
+description: Ideas for future posts.
 ---
 #+END_HTML
 

@@ -8,6 +8,7 @@ title: Reading List
 permalink: /reading_list/
 categories: personal
 tags: [reading,list]
+description: List of books I have read, am currently reading, or would like to read.
 ---
 #+END_HTML
 

@@ -5,7 +5,6 @@
 ---
 layout: post
 title: Keeping my Github account clean and up-to-date
-excerpt: 
 categories: 
 tags: 
 ---

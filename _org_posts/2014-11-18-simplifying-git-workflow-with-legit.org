@@ -5,7 +5,6 @@
 ---
 layout: post
 title: Simplifying git workflow with legit
-excerpt: 
 categories: [development,workflow]
 tags: [devtools,git,workflow]
 ---

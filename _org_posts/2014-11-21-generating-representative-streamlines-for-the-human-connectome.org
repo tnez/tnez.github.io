@@ -5,9 +5,9 @@
 ---
 layout: post
 title: Generating representative streamlines for the human connectome
-excerpt: 
 categories: [neuroimaging,development,data-analysis]
 tags: [connectome,tractography,python]
+description: Explore methods for generating a single streamline that best summarises a group of streamlines by taking the median of all streamlines.
 ---
 #+END_HTML
 

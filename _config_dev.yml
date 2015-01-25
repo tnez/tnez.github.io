@@ -7,7 +7,7 @@ title:            tnesland.me
 tagline:          Software Developer + Data Wrangler
 url:              http://localhost:4000
 shorturl:	  tnesland.me
-paginate:         1
+paginate:         5
 baseurl:          /
 author:
   name:           Travis Nesland

@@ -5,7 +5,6 @@
 ---
 layout: post
 title: A better way to view commit history
-excerpt: 
 categories: 
 tags: 
 ---

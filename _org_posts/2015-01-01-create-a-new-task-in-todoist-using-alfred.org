@@ -5,7 +5,6 @@
 ---
 layout: post
 title: Create a new task in Todoist using Alfred
-excerpt: 
 categories: 
 tags: 
 ---
