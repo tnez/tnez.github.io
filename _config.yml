@@ -5,7 +5,7 @@ relative_permalinks: true
 # Setup
 title:            tnesland.me
 tagline:          Software Developer + Data Wrangler
-url:              http://tnesland.me
+url:              http://tnez.github.io
 shorturl:	  tnesland.me
 paginate:         1
 baseurl:          /
