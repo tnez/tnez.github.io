@@ -14,7 +14,13 @@ author:
   url:            http://tnesland.me
   email:          tnesland@gmail.com
 
+# Navigation
+pages_list:
+  Home: '/'
+  Archive: '/archive'
+
 # Custom vars
 version:          1.0.0
 github:
   repo:           https://github.com/tnez/tnez.github.io
+
