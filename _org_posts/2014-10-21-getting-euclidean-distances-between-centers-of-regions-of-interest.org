@@ -7,6 +7,7 @@ layout: post
 title: Getting Euclidean distances between centers of regions of interest
 categories: [neuroimaging,data-analysis]
 tags: [python,scipy,roi,brain]
+front-page: true
 ---
 #+END_HTML
 

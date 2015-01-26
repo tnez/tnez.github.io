@@ -7,6 +7,7 @@ layout: post
 title: Keeping my Github account clean and up-to-date
 categories: 
 tags: 
+front-page: true
 ---
 #+END_HTML
 

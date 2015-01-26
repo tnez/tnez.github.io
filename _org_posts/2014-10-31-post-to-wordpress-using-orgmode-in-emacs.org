@@ -9,6 +9,7 @@ excerpt:
 categories: [blogging,development]
 tags: [emacs,orgmode,org2blog,wordpress]
 description: Tutorial on how to compose posts using Orgmode in Emacs and post to Wordpress.
+front-page: true
 ---
 #+END_HTML
 
