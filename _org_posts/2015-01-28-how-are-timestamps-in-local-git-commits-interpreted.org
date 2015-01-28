@@ -1,0 +1,32 @@
+#+STARTUP: showall indent
+#+STARTUP: hidestars
+#+OPTIONS: H:4 toc:nil num:nil
+#+BEGIN_HTML
+---
+layout: post
+title: How are timestamps in local git commits interpreted?
+categories: 
+tags: 
+front-page: true
+---
+#+END_HTML
+
+I am curious. I've commited many times to a local repository in the
+past few days. Currently my [[http://github.com/tnez][GitHub]] shows no activity for this period
+because I have not pushed anything to remote repositories during this
+time.
+
+#+CAPTION: My github activity before pushing local commits.
+#+NAME: before.png
+[[file:{{site.url}}/public/media/2015-01-28-before.png]]
+
+Howerver, I am about to push the commits from last couple days. Is
+this activity reflected in my tiles?
+
+#+CAPTION: My github activity after pushing local commits.
+#+NAME: after.png
+[[file:{{site.url}}/public/media/2015-01-28-after.png]]
+
+Looks like activity on [[http://github.com][GitHub]] reflects the time the commits were made
+locally. Cool beans for those who may not post to the remote for a few
+days while working all the while locally. *Cool beans!*
