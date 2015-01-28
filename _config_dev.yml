@@ -6,7 +6,7 @@ relative_permalinks: true
 title:            tnesland.me
 tagline:          Software Developer + Data Wrangler
 url:              http://localhost:4000
-shorturl:	  tnesland.me
+shorturl:	  localhost:4000
 paginate:         5
 baseurl:          /
 author:
