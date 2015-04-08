@@ -3,9 +3,9 @@ permalink:        pretty
 relative_permalinks: true
 
 # Setup
-title:            tnez.github.io
+title:            blog.tnesland
 tagline:          Software Developer + Data Wrangler
-url:              http://tnesland.me/blog
+url:              http://blog.tnesland.me
 shorturl:	  tnesland.me
 paginate:         5
 baseurl:          /
